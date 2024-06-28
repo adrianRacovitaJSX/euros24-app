@@ -8,6 +8,11 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
+  safelist: [
+    'backdrop-blur-lg',
+    'bg-white/75',
+    'dark:bg-black/75'
+  ],
   prefix: "",
   theme: {
     container: {
