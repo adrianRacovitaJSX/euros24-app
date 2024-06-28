@@ -24,7 +24,14 @@ interface Prediction {
 const PredictionForm: React.FC = () => {
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
-
+  const [tournamentHistory, setTournamentHistory] = useState<{
+    [key in Round]: Prediction;
+  }>({
+    roundOf16: {},
+    quarterfinals: {},
+    semifinals: {},
+    final: {},
+  });
   const WinnerModal: React.FC<{ winner: string; onClose: () => void }> = ({
     winner,
     onClose,
@@ -233,7 +240,7 @@ const PredictionForm: React.FC = () => {
         let awayPenalties: number | undefined;
 
         // Small chance (10%) of the match going to penalties
-        if (Math.random() < 0.1) {
+        if (Math.random() < 0.2) {
           // If it goes to penalties, make the scores equal
           awayScore = homeScore;
 
@@ -277,6 +284,11 @@ const PredictionForm: React.FC = () => {
     e.preventDefault();
     const { winners, newPredictions } = getWinners(predictions, currentRound);
 
+    setTournamentHistory((prevHistory) => ({
+      ...prevHistory,
+      [currentRound]: predictions,
+    }));
+
     if (currentRound === "final") {
       setWinner(winners[0]);
       setShowWinnerModal(true);
@@ -309,6 +321,13 @@ const PredictionForm: React.FC = () => {
     setCurrentRound("roundOf16");
     setPredictions(initializePredictions());
     setShowWinnerModal(false);
+    setWinner(null);
+    setTournamentHistory({
+      roundOf16: {},
+      quarterfinals: {},
+      semifinals: {},
+      final: {},
+    });
   };
 
   const getWinners = (
@@ -724,6 +743,108 @@ const PredictionForm: React.FC = () => {
     );
   };
 
+  const renderTournamentHistory = () => {
+    const rounds: Round[] = [
+      "roundOf16",
+      "quarterfinals",
+      "semifinals",
+      "final",
+    ];
+
+    return (
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4">Resultados del Torneo</h2>
+        {rounds.map((round) => (
+          <div key={round} className="mb-8">
+            <h3 className="text-xl font-semibold mb-2">
+              {getRoundTitle(round)}
+            </h3>
+            <div className="overflow-hidden rounded-lg shadow-lg">
+              <table className="w-full bg-white dark:bg-zinc-900">
+                <thead className="bg-gray-50 dark:bg-zinc-800">
+                  <tr>
+                    <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                      Equipo 1
+                    </th>
+                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                      Resultado
+                    </th>
+                    <th className="px-2 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                      Equipo 2
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
+                  {Object.values(tournamentHistory[round]).map(
+                    (match, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? "bg-white dark:bg-zinc-900"
+                            : "bg-gray-50 dark:bg-zinc-800"
+                        }
+                      >
+                        <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <Image
+                              src={flags[match.homeTeam] || ""}
+                              alt={
+                                teamNamesInSpanish[match.homeTeam] ||
+                                match.homeTeam
+                              }
+                              className="w-8 h-6 rounded-sm mr-3"
+                              width={100}
+                              height={6}
+                            />
+                            <span className="text-sm font-medium text-gray-900 dark:text-zinc-100">
+                              {teamNamesInSpanish[match.homeTeam] ||
+                                match.homeTeam}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-center">
+                          <span className="text-sm text-gray-900 dark:text-zinc-100">
+                            {match.homeScore} - {match.awayScore}
+                            {match.homePenalties !== undefined &&
+                              match.awayPenalties !== undefined && (
+                                <span className="text-xs ml-2">
+                                  (Pen: {match.homePenalties} -{" "}
+                                  {match.awayPenalties})
+                                </span>
+                              )}
+                          </span>
+                        </td>
+                        <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end">
+                            <span className="text-sm font-medium text-gray-900 dark:text-zinc-100 mr-3">
+                              {teamNamesInSpanish[match.awayTeam] ||
+                                match.awayTeam}
+                            </span>
+                            <Image
+                              src={flags[match.awayTeam] || ""}
+                              alt={
+                                teamNamesInSpanish[match.awayTeam] ||
+                                match.awayTeam
+                              }
+                              className="w-8 h-6 rounded-sm"
+                              width={100}
+                              height={6}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const getNextRoundText = () => {
     switch (currentRound) {
       case "roundOf16":
@@ -739,12 +860,12 @@ const PredictionForm: React.FC = () => {
     }
   };
 
-  const getRoundTitle = () => {
-    switch (currentRound) {
+  const getRoundTitle = (round: Round): string => {
+    switch (round) {
       case "roundOf16":
-        return "Octavos";
+        return "Octavos de Final";
       case "quarterfinals":
-        return "Cuartos de final";
+        return "Cuartos de Final";
       case "semifinals":
         return "Semifinales";
       case "final":
@@ -757,7 +878,9 @@ const PredictionForm: React.FC = () => {
   return (
     <div className="container mx-auto px-6 lg:px-0 md:px-0 xl:px-0">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold mb-4 sm:mb-0">{getRoundTitle()}</h1>
+        <h1 className="text-2xl font-bold mb-4 sm:mb-0">
+          {getRoundTitle(currentRound)}
+        </h1>
         <div className="flex gap-5 justify-center sm:hidden w-full">
           <button
             onClick={simulateMatches}
@@ -926,7 +1049,13 @@ const PredictionForm: React.FC = () => {
           </button>
         </div>
       </form>
+
       {renderResults()}
+
+      {currentRound === "final" &&
+        Object.keys(tournamentHistory.final).length > 0 &&
+        renderTournamentHistory()}
+
       {showWinnerModal && winner && (
         <WinnerModal
           winner={winner}

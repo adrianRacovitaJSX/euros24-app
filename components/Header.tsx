@@ -5,8 +5,8 @@ import Image from "next/image";
 
 const Header = () => {
   return (
-    <div className="mb-10 w-full flex items-center justify-between p-5 dark:bg-black dark:backdrop-blur-lg backdrop-blur-lg z-50 top-0 bg-opacity-50 dark:bg-opacity-50 dark:backdrop-filter sticky">
-      <div className="flex gap-4 items-center">
+    <div className="w-full sticky top-0 z-50 bg-white dark:bg-black flex justify-between py-3 px-5 items-center backdrop-blur-lg backdrop-filter bg-opacity-30 dark:backdrop-blur-2xl dark:backdrop-filter dark:bg-opacity-60 mb-8">
+    <div className="flex gap-4 items-center">
         <Image src="/logowebuefa.png" alt="logo" width={50} height={50} />
       <h1 className="text-xl font-bold">Eurocopa 2024</h1>
       </div>

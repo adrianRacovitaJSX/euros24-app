@@ -6,7 +6,6 @@ const HomePage: React.FC = () => {
   return (
     <>
     <div className="w-full top-0 sticky z-50">
-    <Header />
     </div>
       <div className="container mx-auto mb-10">
         <PredictionForm />

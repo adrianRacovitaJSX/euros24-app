@@ -2,3 +2,19 @@
   @tailwind components;
   @tailwind utilities;
   
+  @layer base {
+    .header-blur-compatible {
+      backdrop-filter: blur(24px) contrast(60%);
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .no-visible-scrollbar {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+    }
+     
+    .no-visible-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+  }
