@@ -382,93 +382,64 @@ const PredictionForm: React.FC = () => {
         : 1;
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {Array.from({ length: matchCount }, (_, index) => {
-          const prediction = predictions[index] || {
-            homeTeam: "",
-            awayTeam: "",
-            homeScore: undefined,
-            awayScore: undefined,
-          };
-          return (
-            <div key={index} className="flex items-center justify-between">
-              <div className="flex items-center">
-                <img
-                  src={flags[prediction.homeTeam] || ""}
-                  alt={prediction.homeTeam}
-                  className={`w-8 h-6 sm:w-10 sm:h-8 rounded-md ${
-                    prediction.homeScore !== undefined &&
-                    prediction.awayScore !== undefined &&
-                    prediction.homeScore < prediction.awayScore
-                      ? "opacity-50 grayscale"
-                      : ""
-                  }`}
-                />
-                <span className="ml-2 hidden sm:inline">
-                  {prediction.homeTeam}
-                </span>
-              </div>
-              <div className="flex items-center">
-                <Input
-                  type="number"
-                  placeholder="Goles"
-                  className="text-center text-black dark:text-white w-full"
-                  value={
-                    prediction.homeScore !== undefined
-                      ? prediction.homeScore.toString()
-                      : ""
-                  }
-                  onChange={(e) =>
-                    updatePrediction(
-                      index.toString(),
-                      "homeScore",
-                      e.target.value === ""
-                        ? undefined
-                        : parseInt(e.target.value)
-                    )
-                  }
-                />
-                <span className="mx-2">-</span>
-                <Input
-                  type="number"
-                  placeholder="Goles"
-                  className="text-center text-black dark:text-white w-full"
-                  value={
-                    prediction.awayScore !== undefined
-                      ? prediction.awayScore.toString()
-                      : ""
-                  }
-                  onChange={(e) =>
-                    updatePrediction(
-                      index.toString(),
-                      "awayScore",
-                      e.target.value === ""
-                        ? undefined
-                        : parseInt(e.target.value)
-                    )
-                  }
-                />
-              </div>
-              <div className="flex items-center">
-                <span className="mr-2 hidden sm:inline">
-                  {prediction.awayTeam}
-                </span>
-                <img
-                  src={flags[prediction.awayTeam] || ""}
-                  alt={prediction.awayTeam}
-                  className={`w-8 h-6 sm:w-10 sm:h-8 rounded-md ${
-                    prediction.homeScore !== undefined &&
-                    prediction.awayScore !== undefined &&
-                    prediction.homeScore > prediction.awayScore
-                      ? "opacity-50 grayscale"
-                      : ""
-                  }`}
-                />
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {Array.from({ length: matchCount }, (_, index) => {
+        const prediction = predictions[index] || { homeTeam: '', awayTeam: '', homeScore: undefined, awayScore: undefined };
+        return (
+          <div key={index} className="flex flex-col sm:flex-row items-center justify-between bg-white dark:bg-zinc-800 p-4 rounded-lg shadow">
+            <div className="flex items-center w-full sm:w-2/5 justify-center sm:justify-start mb-2 sm:mb-0">
+              <img
+                src={flags[prediction.homeTeam] || ''}
+                alt={prediction.homeTeam}
+                className="w-8 h-6 sm:w-10 sm:h-8 rounded-md mr-2"
+              />
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-zinc-100">
+                {prediction.homeTeam}
+              </span>
             </div>
-          );
-        })}
-      </div>
+            <div className="flex items-center justify-center w-full sm:w-1/5 mb-2 sm:mb-0">
+              <Input
+                type="number"
+                placeholder="Goles"
+                className="w-28 text-center text-black dark:text-white bg-gray-100 dark:bg-zinc-700"
+                value={prediction.homeScore !== undefined ? prediction.homeScore.toString() : ''}
+                onChange={(e) =>
+                  updatePrediction(
+                    index.toString(),
+                    "homeScore",
+                    e.target.value === '' ? undefined : parseInt(e.target.value)
+                  )
+                }
+              />
+              <span className="mx-2 text-gray-500 dark:text-zinc-400">-</span>
+              <Input
+                type="number"
+                placeholder="Goles"
+                className="w-28 text-center text-black dark:text-white bg-gray-100 dark:bg-zinc-700"
+                value={prediction.awayScore !== undefined ? prediction.awayScore.toString() : ''}
+                onChange={(e) =>
+                  updatePrediction(
+                    index.toString(),
+                    "awayScore",
+                    e.target.value === '' ? undefined : parseInt(e.target.value)
+                  )
+                }
+              />
+            </div>
+            <div className="flex items-center w-full sm:w-2/5 justify-center sm:justify-end">
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-zinc-100 mr-2">
+                {prediction.awayTeam}
+              </span>
+              <img
+                src={flags[prediction.awayTeam] || ''}
+                alt={prediction.awayTeam}
+                className="w-8 h-6 sm:w-10 sm:h-8 rounded-md"
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
     );
   };
 
@@ -481,21 +452,15 @@ const PredictionForm: React.FC = () => {
         : currentRound === "semifinals"
         ? 2
         : 1;
-
+  
     return (
-      <div className="mt-8 overflow-hidden rounded-lg shadow-lg 0" mb-10 >
+      <div className="mt-8 overflow-hidden rounded-lg shadow-lg ">
         <table className="w-full bg-white dark:bg-zinc-900">
           <thead className="bg-gray-50 dark:bg-zinc-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                Equipo 1
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                Resultado
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                Equipo 2
-              </th>
+              <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Equipo 1</th>
+              <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Resultado</th>
+              <th className="px-2 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Equipo 2</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
@@ -507,15 +472,8 @@ const PredictionForm: React.FC = () => {
                 awayScore: undefined,
               };
               return (
-                <tr
-                  key={index}
-                  className={
-                    index % 2 === 0
-                      ? "bg-white dark:bg-zinc-900"
-                      : "bg-gray-50 dark:bg-zinc-800"
-                  }
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-zinc-900' : 'bg-gray-50 dark:bg-zinc-800'}>
+                  <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <img
                         src={flags[prediction.homeTeam] || ""}
@@ -523,10 +481,8 @@ const PredictionForm: React.FC = () => {
                         className="w-8 h-6 rounded-sm mr-3"
                       />
                       <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-zinc-100">
-                          {prediction.homeTeam}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-zinc-400">
+                        <div className="text-sm font-medium text-gray-900 dark:text-zinc-100 hidden sm:block">{prediction.homeTeam}</div>
+                        <div className="text-xs text-gray-500 dark:text-zinc-400 hidden sm:block">
                           {prediction.homeScorers?.map((scorer, idx) => (
                             <div key={idx}>
                               {scorer.player} ({scorer.minute}')
@@ -536,9 +492,8 @@ const PredictionForm: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {prediction.homeScore !== undefined &&
-                    prediction.awayScore !== undefined ? (
+                  <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-center">
+                    {prediction.homeScore !== undefined && prediction.awayScore !== undefined ? (
                       <div>
                         <span className="text-lg font-semibold text-gray-900 dark:text-zinc-100">
                           {prediction.homeScore} - {prediction.awayScore}
@@ -546,24 +501,19 @@ const PredictionForm: React.FC = () => {
                         {prediction.homePenalties !== undefined &&
                           prediction.awayPenalties !== undefined && (
                             <div className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                              Penaltis: {prediction.homePenalties} -{" "}
-                              {prediction.awayPenalties}
+                              Penaltis: {prediction.homePenalties} - {prediction.awayPenalties}
                             </div>
                           )}
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-500 dark:text-zinc-400">
-                        Por jugar
-                      </span>
+                      <span className="text-sm text-gray-500 dark:text-zinc-400">Por jugar</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end">
                       <div className="text-right mr-3">
-                        <div className="text-sm font-medium text-gray-900 dark:text-zinc-100">
-                          {prediction.awayTeam}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-zinc-400">
+                        <div className="text-sm font-medium text-gray-900 dark:text-zinc-100 hidden sm:block">{prediction.awayTeam}</div>
+                        <div className="text-xs text-gray-500 dark:text-zinc-400 hidden sm:block">
                           {prediction.awayScorers?.map((scorer, idx) => (
                             <div key={idx}>
                               {scorer.player} ({scorer.minute}')
@@ -605,13 +555,13 @@ const PredictionForm: React.FC = () => {
   const getRoundTitle = () => {
     switch (currentRound) {
       case "roundOf16":
-        return "Octavos - 2024";
+        return "Octavos";
       case "quarterfinals":
-        return "Cuartos de final - 2024";
+        return "Cuartos de final";
       case "semifinals":
-        return "Semifinales - 2024";
+        return "Semifinales";
       case "final":
-        return "Final - 2024";
+        return "Final";
       default:
         return "Euro 2024";
     }
