@@ -20,10 +20,21 @@ interface Prediction {
     awayScorers?: { player: string; minute: number }[];
   };
 }
+interface PlayerStats {
+  name: string;
+  team: string;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  minutesPlayed: number;
+}
 
 const PredictionForm: React.FC = () => {
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"results" | "stats">("results");
+  const [playerStats, setPlayerStats] = useState<PlayerStats[]>([]);
   const [tournamentHistory, setTournamentHistory] = useState<{
     [key in Round]: Prediction;
   }>({
@@ -32,6 +43,22 @@ const PredictionForm: React.FC = () => {
     semifinals: {},
     final: {},
   });
+  const TabButton: React.FC<{
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+  }> = ({ active, onClick, children }) => (
+    <button
+      className={`px-4 py-2 font-semibold rounded-lg ${
+        active
+          ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400"
+          : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-300"
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
   const WinnerModal: React.FC<{ winner: string; onClose: () => void }> = ({
     winner,
     onClose,
@@ -328,6 +355,7 @@ const PredictionForm: React.FC = () => {
       semifinals: {},
       final: {},
     });
+    setPlayerStats([]);
   };
 
   const getWinners = (
@@ -452,18 +480,59 @@ const PredictionForm: React.FC = () => {
       Switzerland: ["Embolo", "Seferović", "Vargas", "Amdouni", "Shaqiri"],
       Italy: ["Immobile", "Retegui", "Raspadori", "Chiesa", "Barella"],
     };
-
     const scorers: { player: string; minute: number }[] = [];
-
+    const assisters: { player: string; minute: number }[] = [];
+  
     for (let i = 0; i < numGoals; i++) {
       const randomIndex = Math.floor(Math.random() * players[teamName].length);
       const randomMinute = Math.floor(Math.random() * 90) + 1;
-      scorers.push({
-        player: players[teamName][randomIndex],
-        minute: randomMinute,
-      });
+      const scorer = players[teamName][randomIndex];
+      scorers.push({ player: scorer, minute: randomMinute });
+  
+      // Generate an assist (80% chance)
+      if (Math.random() < 0.8) {
+        let assisterIndex;
+        do {
+          assisterIndex = Math.floor(Math.random() * players[teamName].length);
+        } while (assisterIndex === randomIndex);
+        const assister = players[teamName][assisterIndex];
+        assisters.push({ player: assister, minute: randomMinute });
+      }
     }
-
+  
+    // Update player statistics
+    setPlayerStats((prevStats) => {
+      const updatedStats = [...prevStats];
+      players[teamName].forEach((player) => {
+        let playerStat = updatedStats.find((stat) => stat.name === player && stat.team === teamName);
+        if (!playerStat) {
+          playerStat = { name: player, team: teamName, goals: 0, assists: 0, yellowCards: 0, redCards: 0, minutesPlayed: 0 };
+          updatedStats.push(playerStat);
+        }
+        
+        // Update minutes played (random between 0 and 90)
+        playerStat.minutesPlayed = Math.floor(Math.random() * 91);
+  
+        // Update goals
+        playerStat.goals += scorers.filter((s) => s.player === player).length;
+  
+        // Update assists
+        playerStat.assists += assisters.filter((a) => a.player === player).length;
+  
+        // Generate yellow cards (10% chance per player)
+        if (Math.random() < 0.1) {
+          playerStat.yellowCards += 1;
+        }
+  
+        // Generate red cards (1% chance per player)
+        if (Math.random() < 0.01) {
+          playerStat.redCards += 1;
+        }
+      });
+  
+      return updatedStats;
+    });
+  
     return scorers;
   };
 
@@ -510,6 +579,41 @@ const PredictionForm: React.FC = () => {
         [index]: updatedPrediction,
       };
     });
+  };
+
+  const renderPlayerStats = () => {
+    const sortedStats = [...playerStats].sort((a, b) => b.goals - a.goals);
+  
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full bg-white dark:bg-zinc-900 shadow-lg rounded-lg">
+          <thead className="bg-gray-50 dark:bg-zinc-800">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Jugador</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Equipo</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Goles</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Asistencias</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Tarjetas Amarillas</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Tarjetas Rojas</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Minutos Jugados</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-zinc-700">
+            {sortedStats.map((player, index) => (
+              <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-zinc-900' : 'bg-gray-50 dark:bg-zinc-800'}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-zinc-100">{player.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400">{teamNamesInSpanish[player.team] || player.team}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400 text-center">{player.goals}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400 text-center">{player.assists}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400 text-center">{player.yellowCards}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400 text-center">{player.redCards}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400 text-center">{player.minutesPlayed}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   };
 
   const renderFormFields = () => {
@@ -744,104 +848,71 @@ const PredictionForm: React.FC = () => {
   };
 
   const renderTournamentHistory = () => {
-    const rounds: Round[] = [
-      "roundOf16",
-      "quarterfinals",
-      "semifinals",
-      "final",
-    ];
-
+    const rounds: Round[] = ["roundOf16", "quarterfinals", "semifinals", "final"];
+    
     return (
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Resultados del Torneo</h2>
+      <>
         {rounds.map((round) => (
           <div key={round} className="mb-8">
-            <h3 className="text-xl font-semibold mb-2">
-              {getRoundTitle(round)}
-            </h3>
+            <h3 className="text-xl font-semibold mb-2">{getRoundTitle(round)}</h3>
             <div className="overflow-hidden rounded-lg shadow-lg">
               <table className="w-full bg-white dark:bg-zinc-900">
                 <thead className="bg-gray-50 dark:bg-zinc-800">
                   <tr>
-                    <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Equipo 1
-                    </th>
-                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Resultado
-                    </th>
-                    <th className="px-2 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Equipo 2
-                    </th>
+                    <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Equipo 1</th>
+                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Resultado</th>
+                    <th className="px-2 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Equipo 2</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
-                  {Object.values(tournamentHistory[round]).map(
-                    (match, index) => (
-                      <tr
-                        key={index}
-                        className={
-                          index % 2 === 0
-                            ? "bg-white dark:bg-zinc-900"
-                            : "bg-gray-50 dark:bg-zinc-800"
-                        }
-                      >
-                        <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Image
-                              src={flags[match.homeTeam] || ""}
-                              alt={
-                                teamNamesInSpanish[match.homeTeam] ||
-                                match.homeTeam
-                              }
-                              className="w-8 h-6 rounded-sm mr-3"
-                              width={100}
-                              height={6}
-                            />
-                            <span className="text-sm font-medium text-gray-900 dark:text-zinc-100">
-                              {teamNamesInSpanish[match.homeTeam] ||
-                                match.homeTeam}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-center">
-                          <span className="text-sm text-gray-900 dark:text-zinc-100">
-                            {match.homeScore} - {match.awayScore}
-                            {match.homePenalties !== undefined &&
-                              match.awayPenalties !== undefined && (
-                                <span className="text-xs ml-2">
-                                  (Pen: {match.homePenalties} -{" "}
-                                  {match.awayPenalties})
-                                </span>
-                              )}
+                  {Object.values(tournamentHistory[round]).map((match, index) => (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-zinc-900' : 'bg-gray-50 dark:bg-zinc-800'}>
+                      <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Image
+                            src={flags[match.homeTeam] || ""}
+                            alt={teamNamesInSpanish[match.homeTeam] || match.homeTeam}
+                            className="w-8 h-6 rounded-sm mr-3"
+                            width={100}
+                            height={6}
+                          />
+                          <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-zinc-100">
+                            {teamNamesInSpanish[match.homeTeam] || match.homeTeam}
                           </span>
-                        </td>
-                        <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-right">
-                          <div className="flex items-center justify-end">
-                            <span className="text-sm font-medium text-gray-900 dark:text-zinc-100 mr-3">
-                              {teamNamesInSpanish[match.awayTeam] ||
-                                match.awayTeam}
+                        </div>
+                      </td>
+                      <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-center">
+                        <span className="text-sm text-gray-900 dark:text-zinc-100">
+                          {match.homeScore} - {match.awayScore}
+                          {match.homePenalties !== undefined && match.awayPenalties !== undefined && (
+                            <span className="text-xs ml-2">
+                              (Pen: {match.homePenalties} - {match.awayPenalties})
                             </span>
-                            <Image
-                              src={flags[match.awayTeam] || ""}
-                              alt={
-                                teamNamesInSpanish[match.awayTeam] ||
-                                match.awayTeam
-                              }
-                              className="w-8 h-6 rounded-sm"
-                              width={100}
-                              height={6}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  )}
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end">
+                          <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-zinc-100 mr-3">
+                            {teamNamesInSpanish[match.awayTeam] || match.awayTeam}
+                          </span>
+                          <Image
+                            src={flags[match.awayTeam] || ""}
+                            alt={teamNamesInSpanish[match.awayTeam] || match.awayTeam}
+                            className="w-8 h-6 rounded-sm"
+                            width={100}
+                            height={6}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
         ))}
-      </div>
+      </>
     );
   };
 
@@ -1053,8 +1124,29 @@ const PredictionForm: React.FC = () => {
       {renderResults()}
 
       {currentRound === "final" &&
-        Object.keys(tournamentHistory.final).length > 0 &&
-        renderTournamentHistory()}
+        Object.keys(tournamentHistory.final).length > 0 && (
+          <div className="mt-8">
+            <div className="flex mb-4 gap-3">
+              <TabButton
+                active={activeTab === "results"}
+                onClick={() => setActiveTab("results")}
+              >
+                Resultados del Torneo
+              </TabButton>
+              <TabButton
+                active={activeTab === "stats"}
+                onClick={() => setActiveTab("stats")}
+              >
+                Estadísticas de Jugadores
+              </TabButton>
+            </div>
+            <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg p-6">
+              {activeTab === "results"
+                ? renderTournamentHistory()
+                : renderPlayerStats()}
+            </div>
+          </div>
+        )}
 
       {showWinnerModal && winner && (
         <WinnerModal
